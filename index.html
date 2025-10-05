@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Joyeux Anniversaire 🎂</title>
+  <style>
+    body {
+      background: #34150c;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #fff;
+    }
+    h1 {
+      margin-top: 30px;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+      text-shadow: 0px 2px 4px #222d;
+    }
+    .gateau-container {
+      width: 95vw;
+      max-width: 400px;
+      margin: 30px auto 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #message {
+      margin: 1.4em 0 0.7em 0;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    .tuto {
+      font-size: 1em;
+      background: #3e2321c7;
+      padding: 3px 12px;
+      border-radius: 14px;
+      margin-bottom: 25px;
+      margin-top: 4px;
+      display: inline-block;
+      box-shadow: 0 0 5px #0005;
+    }
+    @media (max-width: 600px) {
+      .gateau-container { max-width: 98vw; }
+      h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Joyeux 16<sup>ème</sup> anniversaire !</h1>
+  <div class="gateau-container">
+    <svg id="gateau" width="100%" height="320" viewBox="0 0 400 320">
+      <!-- Gâteau forêt noire, 2 niveaux avec cerises -->
+      <!-- Socle -->
+      <ellipse cx="200" cy="280" rx="135" ry="30" fill="#59331d"/>
+      <!-- Corps principal -->
+      <ellipse cx="200" cy="180" rx="125" ry="62" fill="#822d2d"/>
+      <rect x="75" y="120" width="250" height="120" rx="70" fill="#7b3f27" />
+      <!-- Chantilly (blanc) -->
+      <ellipse cx="200" cy="120" rx="125" ry="40" fill="#f2e8e0"/>
+      <!-- Cerises (partie supérieure) -->
+      <circle cx="95" cy="125" r="15" fill="#c91a2c"/>
+      <circle cx="145" cy="105" r="15" fill="#c91a2c"/>
+      <circle cx="200" cy="120" r="15" fill="#c91a2c"/>
+      <circle cx="255" cy="107" r="15" fill="#c91a2c"/>
+      <circle cx="305" cy="125" r="15" fill="#c91a2c"/>
+      <!-- 16 Bougies (avec flammes dynamiques) -->
+      <g id="bougies"></g>
+    </svg>
+    <div id="message">Secoue ton téléphone pour souffler les bougies !</div>
+    <div class="tuto">
+      Si tu es sur mobile, secoue l’appareil !<br/>
+      Sur ordinateur, appuie sur <b>Barre d’espace</b>.
+    </div>
+  </div>
+
+  <script>
+    const NB_BOUGIES = 16;
+
+    function createBougies(node, allumee = true) {
+      node.innerHTML = '';
+      const baseY = 95; // Position verticale des bougies
+      const r = 110;    // Rayon du cercle où elles sont posées
+      for (let i = 0; i < NB_BOUGIES; i++) {
+        const angle = (i/(NB_BOUGIES-1)) * Math.PI; // Réparties en arc de cercle
+        const bx = 200 + r*Math.cos(angle-Math.PI/2);
+        const by = baseY + r*Math.sin(angle-Math.PI/2);
+
+        // Bougie
+        node.innerHTML += `
+        <g id="bougie${i}">
+          <rect x="${bx-7}" y="${by-35}" width="14" height="30" fill="#efe7f3" stroke="#9d8cbf" rx="4"/>
+          ${allumee ? `
+          <ellipse class="flamme" id="flamme${i}" cx="${bx}" cy="${by-39}" rx="6" ry="11"
+           fill="gold" style="opacity:1;filter:drop-shadow(0px 0px 6px #ffa);">
+          </ellipse>` : `
+          <ellipse class="flamme" id="flamme${i}" cx="${bx}" cy="${by-39}" rx="6" ry="11"
+           fill="gold" style="opacity:0;">
+          </ellipse>`}
+        </g>`;
+      }
+    }
+
+    // Initiate candles
+    const bougiesNode = document.getElementById("bougies");
+    createBougies(bougiesNode, true);
+
+    // Anim flamme (léger tremblement/flottement)
+    function animerFlammes() {
+      const flammes = document.querySelectorAll(".flamme");
+      flammes.forEach((f,i)=>{
+        // Si flamme cachée, ne rien faire
+        if (f.style.opacity === "0") return;
+        let t = Date.now()/400 + i*2;
+        let dx = Math.sin(t)*2, dy = Math.cos(t*1.8)*2;
+        f.setAttribute("cx", Number(f.getAttribute("cx_orig")) + dx || f.getAttribute("cx"));
+        f.setAttribute("cy", Number(f.getAttribute("cy_orig")) + dy || f.getAttribute("cy"));
+      });
+      requestAnimationFrame(animerFlammes);
+    }
+    // Save cx/cy originaux pour chaque flamme
+    document.querySelectorAll(".flamme").forEach(fl=> {
+      fl.setAttribute("cx_orig", fl.getAttribute("cx"));
+      fl.setAttribute("cy_orig", fl.getAttribute("cy"));
+    });
+    animerFlammes();
+
+    // Extinction (anime la disparition des flammes)
+    function eteindreBougies() {
+      document.getElementById('message').textContent = "Bravo, toutes les bougies sont éteintes ! 🎉";
+      for (let i = 0; i < NB_BOUGIES; i++) {
+        const flamme = document.getElementById(`flamme${i}`);
+        if (flamme) {
+          flamme.style.transition = "opacity 0.6s";
+          flamme.style.opacity = "0";
+        }
+      }
+    }
+
+    // Remet toutes les flammes (pour reset/replay)
+    function rallumerBougies() {
+      document.getElementById('message').textContent = "Secoue ton téléphone pour souffler les bougies !";
+      for (let i = 0; i < NB_BOUGIES; i++) {
+        const flamme = document.getElementById(`flamme${i}`);
+        if (flamme) {
+          flamme.style.transition = "opacity 0.6s";
+          flamme.style.opacity = "1";
+        }
+      }
+    }
+
+    // Détection du shake (accéléromètre)
+    let lastShake = 0;
+    let alreadyOff = false;
+    if (window.DeviceMotionEvent) {
+      window.addEventListener('devicemotion', function(e) {
+        // Mesure de secousse (mvt global)
+        const acc = e.accelerationIncludingGravity;
+        const force = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+        const now = Date.now();
+        if (force > 18 && now-lastShake > 2000 && !alreadyOff) { // seuil ajusté
+          eteindreBougies();
+          alreadyOff = true;
+          lastShake = now;
+        }
+      });
+    }
+    // Version desktop : Appuyer sur Espace
+    document.body.addEventListener("keydown", function(e) {
+      if ((e.code=="Space" || e.keyCode==32) && !alreadyOff) {
+        eteindreBougies();
+        alreadyOff = true;
+      }
+      // Reset avec R
+      if ((e.code=="KeyR" || e.keyCode==82)) {
+        rallumerBougies();
+        alreadyOff = false;
+      }
+    });
+  </script>
+</body>
+</html>
